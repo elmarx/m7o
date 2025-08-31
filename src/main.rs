@@ -3,10 +3,11 @@ use std::time::Duration;
 
 use futures::{StreamExt, future};
 use k8s_openapi::api::core::v1::Pod;
-use kube::ResourceExt;
 use kube::runtime::Controller;
-use kube::{Api, Client, Error, runtime::controller::Action};
+use kube::{Api, Client, Error, ResourceExt, runtime::controller::Action};
 use tracing::info;
+
+pub mod v1;
 
 #[derive(thiserror::Error, Debug)]
 pub enum M7oError {}
