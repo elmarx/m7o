@@ -2,6 +2,11 @@
 name = "m7o"
 version = "0.1.0"
 edition = "2024"
+default-run = "m7o"
+
+[[bin]]
+name = "crdgen"
+path = "src/crdgen.rs"
 
 [dependencies]
 k8s-openapi = { version = "0.26.0", features = ["v1_33"] }
@@ -14,3 +19,4 @@ thiserror = "2.0.17"
 serde = { version = "1.0.228", features = ["derive"] }
 schemars = "1.1.0"
 serde_json = "1.0.145"
+serde_yaml = "0.9.34"
