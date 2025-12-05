@@ -1,9 +1,9 @@
 use std::sync::Arc;
 use std::time::Duration;
 
+use crate::v1::MqttBroker;
 use futures::{StreamExt, future};
-use k8s_openapi::api::core::v1::Pod;
-use kube::runtime::Controller;
+use kube::runtime::{Controller, watcher};
 use kube::{Api, Client, Error, ResourceExt, runtime::controller::Action};
 use tracing::info;
 
@@ -19,9 +19,9 @@ async fn main() -> Result<(), Error> {
     tracing_subscriber::fmt::init();
 
     let client = Client::try_default().await?;
-    let pods = Api::<Pod>::all(client);
+    let broker = Api::<MqttBroker>::all(client);
 
-    Controller::new(pods.clone(), Default::default())
+    Controller::new(broker.clone(), watcher::Config::default())
         .run(reconcile, error_policy, Arc::new(()))
         .for_each(|_| future::ready(()))
         .await;
@@ -29,11 +29,11 @@ async fn main() -> Result<(), Error> {
     Ok(())
 }
 
-fn error_policy(_object: Arc<Pod>, _err: &M7oError, _ctx: Arc<()>) -> Action {
+fn error_policy(_object: Arc<MqttBroker>, _err: &M7oError, _ctx: Arc<()>) -> Action {
     Action::requeue(Duration::from_secs(5))
 }
 
-async fn reconcile(obj: Arc<Pod>, _ctx: Arc<()>) -> Result<Action> {
+async fn reconcile(obj: Arc<MqttBroker>, _ctx: Arc<()>) -> Result<Action> {
     info!("reconcile request: {}", obj.name_any());
 
     Ok(Action::requeue(Duration::from_secs(3600)))

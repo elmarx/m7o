@@ -1,0 +1,7 @@
+apiVersion: m7o.athmer.cloud/v1alpha
+kind: MqttBroker
+metadata:
+  namespace: default
+  name: mosquitto
+spec:
+  desc: "Home Assistant Broker"
