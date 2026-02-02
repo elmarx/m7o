@@ -1,0 +1,14 @@
+apiVersion: mqtt.mycompany.io/v1
+kind: BrokerRole
+metadata:
+  name: sensor-reader
+spec:
+  description: "Read-only access to sensor topics"
+  permissions:
+    - topic: sensors/+
+      access: read
+    - topic: status/+
+      access: read
+  ttl: 90d                # optional, if you want role-based user expiration
+  labels:
+    role-type: read-only

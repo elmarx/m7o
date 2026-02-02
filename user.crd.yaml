@@ -1,0 +1,14 @@
+apiVersion: mqtt.mycompany.io/v1
+kind: BrokerUser
+metadata:
+  name: alice
+spec:
+  brokerRef:
+    name: my-mqtt-broker
+  username: alice
+  permissions:
+    - topic: sensors/+
+      access: read
+    - topic: commands/#
+      access: write
+  secretName: alice-credentials
