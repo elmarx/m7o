@@ -1,7 +1,9 @@
 use crate::v1::MqttBroker;
 use crate::{MOSQUITTO_VERSION, labels};
 use k8s_openapi::api::apps::v1::{Deployment, DeploymentSpec};
-use k8s_openapi::api::core::v1::{ConfigMap, Container, ContainerPort, PodSpec, PodTemplateSpec};
+use k8s_openapi::api::core::v1::{
+    ConfigMapVolumeSource, Container, ContainerPort, PodSpec, PodTemplateSpec, Volume, VolumeMount,
+};
 use k8s_openapi::apimachinery::pkg::apis::meta::v1::{LabelSelector, ObjectMeta};
 use kube::Resource;
 
@@ -32,29 +34,52 @@ impl MqttBroker {
                         ..ObjectMeta::default()
                     }),
                     spec: Some(PodSpec {
-                        containers: vec![Container {
-                            name: "mosquitto".to_string(),
-                            image: format!("eclipse-mosquitto:{MOSQUITTO_VERSION}").into(),
-                            ports: Some(vec![ContainerPort {
-                                container_port: 1883,
-                                name: Some("mqtt".to_string()),
-                                ..ContainerPort::default()
-                            }]),
-                            volume_mounts: Some(vec![k8s_openapi::api::core::v1::VolumeMount {
+                        share_process_namespace: Some(true),
+                        containers: vec![
+                            Container {
+                                name: "mosquitto".to_string(),
+                                image: format!("eclipse-mosquitto:{MOSQUITTO_VERSION}").into(),
+                                ports: Some(vec![ContainerPort {
+                                    container_port: 1883,
+                                    name: Some("mqtt".to_string()),
+                                    ..ContainerPort::default()
+                                }]),
+                                volume_mounts: Some(vec![VolumeMount {
+                                    name: "m7o-cfg".to_string(),
+                                    mount_path: "/mosquitto/config".to_string(),
+                                    ..Default::default()
+                                }]),
+                                ..Container::default()
+                            },
+                            // a sidecar that sends SIGHUP to mosquitto if the configmap/mosquitto.conf changes
+                            Container {
+                                name: "watcher".to_string(),
+                                image: Some("alpine".to_string()),
+                                command: Some(vec![
+                                    "sh".to_string(),
+                                    "-c".to_string(),
+                                    "echo -e '#!/bin/sh\\nkill -HUP $(pidof mosquitto)' > /usr/local/bin/reload.sh && chmod +x /usr/local/bin/reload.sh && while :; do inotifyd /usr/local/bin/reload.sh /mosquitto/config/mosquitto.conf:c; sleep 1; done".to_string(),
+                                ]),
+                                volume_mounts: Some(vec![
+                                    VolumeMount {
+                                        name: "m7o-cfg".to_string(),
+                                        mount_path: "/mosquitto/config".to_string(),
+                                        ..Default::default()
+                                    },
+                                ]),
+                                ..Container::default()
+                            },
+                        ],
+                        volumes: Some(vec![
+                            Volume {
                                 name: "m7o-cfg".to_string(),
-                                mount_path: "/mosquitto/config".to_string(),
+                                config_map: Some(ConfigMapVolumeSource {
+                                    name: name.clone(),
+                                    ..Default::default()
+                                }),
                                 ..Default::default()
-                            }]),
-                            ..Container::default()
-                        }],
-                        volumes: Some(vec![k8s_openapi::api::core::v1::Volume {
-                            name: "m7o-cfg".to_string(),
-                            config_map: Some(k8s_openapi::api::core::v1::ConfigMapVolumeSource {
-                                name: name.clone(),
-                                ..Default::default()
-                            }),
-                            ..Default::default()
-                        }]),
+                            },
+                        ]),
                         ..PodSpec::default()
                     }),
                 },
