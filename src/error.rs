@@ -1,5 +1,7 @@
 #[derive(thiserror::Error, Debug)]
 pub enum M7oError {
+    #[error("Failed to list secrets: {0}")]
+    ListSecrets(#[source] kube::Error),
     #[error("Failed to list users: {0}")]
     ListUsers(#[source] kube::Error),
     #[error("Failed to create secret: {0}")]
