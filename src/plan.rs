@@ -32,7 +32,6 @@ pub fn plan(
 
 #[cfg(test)]
 mod tests {
-
     use super::*;
     use crate::user::BROKER_REF_LABEL;
     use crate::v1::{BrokerRef, BrokerSpec, MqttUserSpec, ServiceConfig};

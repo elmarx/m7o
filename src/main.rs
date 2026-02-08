@@ -12,6 +12,7 @@ use kube::{Api, Client, Error, ResourceExt, runtime::controller::Action};
 use tracing::error;
 
 mod broker;
+mod credentials;
 mod error;
 mod labels;
 mod plan;
