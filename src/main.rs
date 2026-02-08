@@ -2,6 +2,7 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use crate::v1::{MqttBroker, MqttUser};
+use error::M7oError;
 use futures::{StreamExt, future, stream};
 use k8s_openapi::api::apps::v1::Deployment;
 use k8s_openapi::api::core::v1::{ConfigMap, Secret, Service};
@@ -13,13 +14,11 @@ use tracing::{error, info};
 
 mod broker;
 mod cm_ext;
+mod error;
 mod labels;
 mod user;
 mod util;
 pub mod v1;
-
-#[derive(thiserror::Error, Debug)]
-pub enum M7oError {}
 
 pub type Result<T, E = M7oError> = std::result::Result<T, E>;
 
@@ -60,7 +59,8 @@ async fn main() -> Result<(), Error> {
     Ok(())
 }
 
-fn error_policy(_object: Arc<MqttBroker>, _err: &M7oError, _ctx: Arc<Data>) -> Action {
+fn error_policy(_object: Arc<MqttBroker>, err: &M7oError, _ctx: Arc<Data>) -> Action {
+    error!("Reconciliation error: {:#?}", err);
     Action::requeue(Duration::from_secs(5))
 }
 
@@ -75,17 +75,14 @@ async fn reconcile(obj: Arc<MqttBroker>, ctx: Arc<Data>) -> Result<Action> {
     let users_api = Api::<MqttUser>::namespaced(ctx.client.clone(), obj.namespace());
     let secrets_api = Api::<Secret>::namespaced(ctx.client.clone(), obj.namespace());
 
-    let users = match users_api.list(&ListParams::default()).await {
-        Ok(list) => list
-            .items
-            .into_iter()
-            .filter(|u| u.spec.broker_ref.name == obj.name_any())
-            .collect::<Vec<_>>(),
-        Err(e) => {
-            error!("failed to list users: {:#?}", e);
-            vec![]
-        }
-    };
+    let users = users_api
+        .list(&ListParams::default())
+        .await
+        .map_err(M7oError::ListUsers)?
+        .items
+        .into_iter()
+        .filter(|u| u.spec.broker_ref.name == obj.name_any())
+        .collect::<Vec<_>>();
 
     let secrets_to_create = stream::iter(users)
         .filter_map(|user| {
@@ -103,48 +100,42 @@ async fn reconcile(obj: Arc<MqttBroker>, ctx: Arc<Data>) -> Result<Action> {
         .await;
 
     for secret in secrets_to_create {
-        let secret_result = secrets_api.create(&PostParams::default(), &secret).await;
-        if let Err(e) = secret_result {
-            error!("failed to create secret {:#?}", e);
-        }
+        secrets_api
+            .create(&PostParams::default(), &secret)
+            .await
+            .map_err(M7oError::CreateSecret)?;
     }
 
     let configmap = obj.configmap();
     let deployment = obj.deployment(&configmap);
     let service = obj.service();
 
-    let deployment_result = deployment_api
+    deployment_api
         .patch(
             deployment.metadata.name.as_ref().unwrap(),
             &PatchParams::apply(MANAGER),
             &kube::api::Patch::Apply(&deployment),
         )
-        .await;
+        .await
+        .map_err(M7oError::PatchDeployment)?;
 
-    if let Err(err) = deployment_result {
-        error!("failed to patch deployment: {:#?}", err);
-    }
-    let service_result = service_api
+    service_api
         .patch(
             service.metadata.name.as_ref().unwrap(),
             &PatchParams::apply(MANAGER),
             &kube::api::Patch::Apply(&service),
         )
-        .await;
-    if let Err(err) = service_result {
-        error!("failed to patch service: {:#?}", err);
-    }
+        .await
+        .map_err(M7oError::PatchService)?;
 
-    let configmap_result = configmap_api
+    configmap_api
         .patch(
             configmap.metadata.name.as_ref().unwrap(),
             &PatchParams::apply(MANAGER),
             &kube::api::Patch::Apply(&configmap),
         )
-        .await;
-    if let Err(err) = configmap_result {
-        error!("failed to patch configmap: {:#?}", err);
-    }
+        .await
+        .map_err(M7oError::PatchConfigMap)?;
 
     Ok(Action::requeue(Duration::from_secs(3600)))
 }
