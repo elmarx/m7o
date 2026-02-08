@@ -21,7 +21,7 @@ pub enum M7oError {}
 
 pub type Result<T, E = M7oError> = std::result::Result<T, E>;
 
-const MOSQUITTO_VERSION: &str = "2.0.22";
+const MOSQUITTO_VERSION: &str = "2.1.0-alpine";
 
 struct Data {
     client: Client,
