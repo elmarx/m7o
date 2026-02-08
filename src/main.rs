@@ -10,12 +10,9 @@ use kube::runtime::{Controller, watcher};
 use kube::{Api, Client, Error, ResourceExt, runtime::controller::Action};
 use tracing::{error, info};
 
+mod broker;
 mod cm_ext;
-mod configmap;
-mod deployment;
 mod labels;
-mod metadata;
-mod service;
 pub mod v1;
 
 #[derive(thiserror::Error, Debug)]
