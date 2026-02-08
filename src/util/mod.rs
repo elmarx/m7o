@@ -1,6 +1,8 @@
 use rand::Rng;
 use rand::distr::Alphanumeric;
 
+pub mod cm_ext;
+
 pub fn generate_password() -> String {
     rand::rng()
         .sample_iter(&Alphanumeric)
