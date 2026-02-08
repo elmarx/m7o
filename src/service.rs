@@ -18,10 +18,12 @@ impl MqttBroker {
                 namespace: self.metadata.namespace.clone(),
                 owner_references: Some(vec![oref]),
                 labels: Some(labels),
+                annotations: Some(self.spec.service.annotations.clone()),
                 ..ObjectMeta::default()
             },
             spec: ServiceSpec {
                 selector: Some(selector),
+                type_: Some(self.spec.service.type_.to_string()),
                 ports: Some(vec![k8s_openapi::api::core::v1::ServicePort {
                     port: 1883,
                     target_port: Some(IntOrString::String("mqtt".to_string())),
