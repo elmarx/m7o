@@ -13,6 +13,7 @@ use tracing::{error, info};
 mod broker;
 mod cm_ext;
 mod labels;
+mod util;
 pub mod v1;
 
 #[derive(thiserror::Error, Debug)]
