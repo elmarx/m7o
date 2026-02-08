@@ -26,8 +26,14 @@ pub async fn reconcile(obj: Arc<MqttBroker>, ctx: Arc<Data>) -> crate::Result<Ac
         .items;
 
     // List all secrets managed by this operator for this broker
+    let lp = ListParams::default().labels(&format!(
+        "{}={}",
+        crate::user::BROKER_REF_LABEL,
+        obj.name_any()
+    ));
+
     let existing_secrets = secrets_api
-        .list(&ListParams::default())
+        .list(&lp)
         .await
         .map_err(M7oError::ListSecrets)?
         .items;

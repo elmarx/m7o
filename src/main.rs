@@ -5,12 +5,11 @@ use crate::v1::{MqttBroker, MqttUser};
 use error::M7oError;
 use futures::{StreamExt, future};
 use k8s_openapi::api::apps::v1::Deployment;
-use k8s_openapi::api::core::v1::{ConfigMap, Secret, Service};
-use kube::api::{ListParams, PatchParams, PostParams};
+use k8s_openapi::api::core::v1::{ConfigMap, Service};
 use kube::runtime::reflector::ObjectRef;
 use kube::runtime::{Controller, watcher};
 use kube::{Api, Client, Error, ResourceExt, runtime::controller::Action};
-use tracing::{error, info};
+use tracing::error;
 
 mod broker;
 mod cm_ext;
