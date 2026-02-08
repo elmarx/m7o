@@ -30,3 +30,21 @@ pub enum ServiceType {
     ClusterIP,
     LoadBalancer,
 }
+
+#[derive(CustomResource, Deserialize, Serialize, Clone, Debug, JsonSchema)]
+#[kube(
+    kind = "MqttUser",
+    group = "m7o.athmer.cloud",
+    version = "v1alpha",
+    namespaced
+)]
+#[serde(rename_all = "camelCase")]
+pub struct MqttUserSpec {
+    pub broker_ref: BrokerRef,
+    pub username: String,
+}
+
+#[derive(Deserialize, Serialize, Clone, Debug, JsonSchema)]
+pub struct BrokerRef {
+    pub name: String,
+}

@@ -1,0 +1,9 @@
+apiVersion: m7o.athmer.cloud/v1alpha
+kind: MqttUser
+metadata:
+  namespace: default
+  name: elmar
+spec:
+  brokerRef:
+    name: mosquitto
+  username: elmar
