@@ -10,6 +10,7 @@ use kube::runtime::{Controller, watcher};
 use kube::{Api, Client, Error, ResourceExt, runtime::controller::Action};
 use tracing::{error, info};
 
+mod configmap;
 mod deployment;
 mod labels;
 mod metadata;
@@ -61,10 +62,16 @@ async fn reconcile(obj: Arc<MqttBroker>, ctx: Arc<Data>) -> Result<Action> {
 
     let deployment = obj.deployment();
     let service = obj.service();
+    let configmap = obj.configmap();
 
     let deployment_api = Api::<Deployment>::namespaced(ctx.client.clone(), obj.namespace());
     let service_api =
         Api::<k8s_openapi::api::core::v1::Service>::namespaced(ctx.client.clone(), obj.namespace());
+    let configmap_api = Api::<k8s_openapi::api::core::v1::ConfigMap>::namespaced(
+        ctx.client.clone(),
+        obj.namespace(),
+    );
+
     let deployment_result = deployment_api
         .patch(
             deployment.metadata.name.as_ref().unwrap(),
@@ -85,6 +92,17 @@ async fn reconcile(obj: Arc<MqttBroker>, ctx: Arc<Data>) -> Result<Action> {
         .await;
     if let Err(err) = service_result {
         error!("failed to patch service: {:#?}", err);
+    }
+
+    let configmap_result = configmap_api
+        .patch(
+            configmap.metadata.name.as_ref().unwrap(),
+            &PatchParams::apply(MANAGER),
+            &kube::api::Patch::Apply(&configmap),
+        )
+        .await;
+    if let Err(err) = configmap_result {
+        error!("failed to patch configmap: {:#?}", err);
     }
 
     Ok(Action::requeue(Duration::from_secs(3600)))
