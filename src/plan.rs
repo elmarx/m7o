@@ -1,33 +1,75 @@
-use std::collections::HashSet;
-
+use crate::credentials::Credentials;
 use crate::v1::{MqttBroker, MqttUser};
+use itertools::Itertools;
 use k8s_openapi::api::apps::v1::Deployment;
 use k8s_openapi::api::core::v1::{ConfigMap, Secret, Service};
-use kube::ResourceExt;
+use k8s_openapi::apimachinery::pkg::apis::meta::v1::ObjectMeta;
 use kube::runtime::reflector::Lookup;
+use kube::{Resource, ResourceExt};
+use std::collections::HashMap;
 
 pub fn plan(
     broker: &MqttBroker,
     users: &[MqttUser],
     existing_secrets: &[Secret],
-) -> (ConfigMap, Deployment, Service, Vec<Secret>) {
-    let existing_secrets = existing_secrets
+) -> (ConfigMap, Deployment, Service, Vec<Secret>, Secret) {
+    let mut credentials = existing_secrets
         .iter()
-        .filter_map(Lookup::name)
-        .collect::<HashSet<_>>();
+        .filter_map(|s| {
+            let credentials = Credentials::try_from(s).ok();
+            let name = s.name().map(|n| n.to_string());
+
+            name.and_then(|n| credentials.map(|p| (n, p)))
+        })
+        .collect::<HashMap<_, _>>();
 
     let configmap = broker.configmap();
     let deployment = broker.deployment(&configmap);
     let service = broker.service();
 
-    let secrets = users
-        .iter()
-        .filter(|u| u.spec.broker_ref.name == broker.name_any())
-        .map(MqttUser::secret)
-        .filter(|s| !existing_secrets.contains(s.name().unwrap().as_ref()))
-        .collect();
+    let mut secrets_to_create = Vec::with_capacity(users.len() - existing_secrets.len());
 
-    (configmap, deployment, service, secrets)
+    let users = users
+        .iter()
+        .filter(|u| u.spec.broker_ref.name == broker.name_any());
+
+    for user in users {
+        let secret_name = user.secret_name();
+        if !credentials.contains_key(secret_name.as_str()) {
+            let secret = user.secret();
+            credentials.insert(secret_name, (&secret).try_into().unwrap());
+            secrets_to_create.push(secret);
+        }
+    }
+
+    let password_file = credentials
+        .values()
+        .sorted_by_key(|c| &c.username)
+        .map(Credentials::password_file_line)
+        .collect::<Vec<String>>();
+
+    let password_file = Secret {
+        metadata: ObjectMeta {
+            name: broker.name().map(|n| n.to_string()),
+            namespace: broker.namespace().to_string().into(),
+            owner_references: Some(vec![broker.controller_owner_ref(&()).unwrap()]),
+            ..Default::default()
+        },
+        string_data: Some(
+            [("password_file".to_string(), password_file.concat())]
+                .into_iter()
+                .collect(),
+        ),
+        ..Default::default()
+    };
+
+    (
+        configmap,
+        deployment,
+        service,
+        secrets_to_create,
+        password_file,
+    )
 }
 
 #[cfg(test)]
@@ -53,7 +95,7 @@ mod tests {
             },
         };
 
-        let (cm, deploy, svc, secrets) = plan(&sample, &[], &[]);
+        let (cm, deploy, svc, secrets, _) = plan(&sample, &[], &[]);
 
         assert_eq!(cm.name_any(), "test-broker");
         assert_eq!(deploy.name_any(), "test-broker");
@@ -91,7 +133,7 @@ mod tests {
             },
         };
 
-        let (_, _, _, secrets) = plan(&sample_broker, &[sample_user], &[]);
+        let (_, _, _, secrets, _) = plan(&sample_broker, &[sample_user], &[]);
 
         let (head, tails) = secrets.split_first().unwrap();
 
@@ -133,7 +175,8 @@ mod tests {
         };
 
         let mut data = BTreeMap::new();
-        data.insert("password".into(), "given password".into());
+        data.insert("username".into(), "myuser".into());
+        data.insert("hash".into(), "hashed".into());
 
         let existing_secret = Secret {
             metadata: ObjectMeta {
@@ -150,7 +193,7 @@ mod tests {
             ..Default::default()
         };
 
-        let (_, _, _, actual_secrets) = plan(&sample_broker, &[sample_user], &[existing_secret]);
+        let (_, _, _, actual_secrets, _) = plan(&sample_broker, &[sample_user], &[existing_secret]);
 
         assert!(actual_secrets.is_empty());
     }

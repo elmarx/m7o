@@ -6,6 +6,8 @@ pub enum M7oError {
     ListUsers(#[source] kube::Error),
     #[error("Failed to create secret: {0}")]
     CreateSecret(#[source] kube::Error),
+    #[error("Failed to patch Secret: {0}")]
+    PatchSecret(#[source] kube::Error),
     #[error("Failed to patch deployment: {0}")]
     PatchDeployment(#[source] kube::Error),
     #[error("Failed to patch service: {0}")]

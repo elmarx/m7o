@@ -8,8 +8,13 @@ use std::collections::BTreeMap;
 
 impl MqttUser {
     #[must_use]
+    pub fn secret_name(&self) -> String {
+        format!("{}-{}", self.spec.broker_ref.name, self.spec.username)
+    }
+
+    #[must_use]
     pub fn secret(&self) -> Secret {
-        let name = format!("{}-{}", self.spec.broker_ref.name, self.spec.username);
+        let name = self.secret_name();
 
         let password = crate::util::generate_password();
         let hash = hash_password(&password);

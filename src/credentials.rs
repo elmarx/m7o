@@ -5,6 +5,12 @@ pub struct Credentials {
     pub username: String,
 }
 
+impl Credentials {
+    pub fn password_file_line(&self) -> String {
+        format!("{}:{}\n", self.username, self.password_hash)
+    }
+}
+
 fn get_data<'a>(secret: &'a Secret, key: &str) -> Option<&'a str> {
     if let Some(d) = secret
         .string_data

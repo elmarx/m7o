@@ -38,7 +38,7 @@ pub async fn reconcile(obj: Arc<MqttBroker>, ctx: Arc<Data>) -> crate::Result<Ac
         .map_err(M7oError::ListSecrets)?
         .items;
 
-    let (configmap, deployment, service, secrets_to_create) =
+    let (configmap, deployment, service, secrets_to_create, password_file) =
         plan::plan(&obj, &users, &existing_secrets);
 
     for secret in secrets_to_create {
@@ -47,6 +47,15 @@ pub async fn reconcile(obj: Arc<MqttBroker>, ctx: Arc<Data>) -> crate::Result<Ac
             .await
             .map_err(M7oError::CreateSecret)?;
     }
+
+    secrets_api
+        .patch(
+            password_file.metadata.name.as_ref().unwrap(),
+            &PatchParams::apply(MANAGER),
+            &kube::api::Patch::Apply(&password_file),
+        )
+        .await
+        .map_err(M7oError::PatchSecret)?;
 
     deployment_api
         .patch(
