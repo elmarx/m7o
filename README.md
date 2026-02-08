@@ -4,10 +4,32 @@ An operator to deploy and manage mosquitto mqtt broker.
 
 ## Features
 
-- [ ] MosquittoBroker CRD to deploy broker
-- [ ] MosquittoUser to create users (and store credentials to specified secret)
+- [x] MosquittoBroker CRD to deploy broker
+- [x] MosquittoUser to create users (and store credentials to specified secret)
 - [ ] MosquittoAcl to control access
 - [ ] MosquittoBridge to mirror topics from/to other brokers
+
+# Local testing with minikube
+
+```shell
+minikube start
+# generate and install CRDs
+cargo run --bin crdgen | kubectl --context {{ context }} apply -f -
+# install sample broker
+kubectl apply -f manifests
+# run m7o operator
+cargo run
+# make minikube loadbalancers available
+minikube tunnel 
+# get the broker's external IP
+IP=$(kubectl get svc mosquitto -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+# get the generated password
+PASSWORD=$(kubectl get secrets mosquitto-elmar -o jsonpath="{.data.password}" | base64 -d)  
+# sub to a topic
+mosquitto_sub -h $IP -u elmar -P $PASSWORD -t "m7o"
+# publish a message
+mosquitto_pub -h $IP -u elmar -P $PASSWORD -t "m7o" -m "Hello, m7o!"
+```
 
 # Debugging
 
