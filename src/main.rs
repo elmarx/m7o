@@ -10,6 +10,7 @@ use kube::runtime::{Controller, watcher};
 use kube::{Api, Client, Error, ResourceExt, runtime::controller::Action};
 use tracing::{error, info};
 
+mod cm_ext;
 mod configmap;
 mod deployment;
 mod labels;
@@ -60,9 +61,9 @@ pub const MANAGER: &str = "m7o.athmer.cloud";
 async fn reconcile(obj: Arc<MqttBroker>, ctx: Arc<Data>) -> Result<Action> {
     info!("reconcile request: {}", obj.name_any());
 
-    let deployment = obj.deployment();
-    let service = obj.service();
     let configmap = obj.configmap();
+    let deployment = obj.deployment(&configmap);
+    let service = obj.service();
 
     let deployment_api = Api::<Deployment>::namespaced(ctx.client.clone(), obj.namespace());
     let service_api =

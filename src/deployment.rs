@@ -1,13 +1,21 @@
+use crate::cm_ext::ConfigMapExt;
 use crate::v1::MqttBroker;
 use crate::{MOSQUITTO_VERSION, labels};
 use k8s_openapi::api::apps::v1::{Deployment, DeploymentSpec};
 use k8s_openapi::api::core::v1::{ConfigMap, Container, ContainerPort, PodSpec, PodTemplateSpec};
 use k8s_openapi::apimachinery::pkg::apis::meta::v1::{LabelSelector, ObjectMeta};
 use kube::Resource;
+use std::collections::BTreeMap;
+
+fn pod_annotations(hash: &str) -> BTreeMap<String, String> {
+    let mut annotations = BTreeMap::new();
+    annotations.insert("m7o.athmer.cloud/config-hash".to_string(), hash.to_string());
+    annotations
+}
 
 impl MqttBroker {
     #[must_use]
-    pub fn deployment(&self) -> Deployment {
+    pub fn deployment(&self, cm: &ConfigMap) -> Deployment {
         let oref = self.controller_owner_ref(&()).unwrap();
         let name = self.metadata.name.as_ref().unwrap();
         let labels = labels::metadata(name, MOSQUITTO_VERSION);
@@ -29,6 +37,7 @@ impl MqttBroker {
                 template: PodTemplateSpec {
                     metadata: Some(ObjectMeta {
                         labels: Some(labels),
+                        annotations: Some(pod_annotations(&cm.hash())),
                         ..ObjectMeta::default()
                     }),
                     spec: Some(PodSpec {
