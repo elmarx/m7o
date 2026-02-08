@@ -3,6 +3,7 @@ use rand::distr::Alphanumeric;
 
 pub mod cm_ext;
 pub mod hash;
+pub mod secret_ext;
 
 pub fn generate_password() -> String {
     rand::rng()
@@ -10,4 +11,8 @@ pub fn generate_password() -> String {
         .take(24)
         .map(char::from)
         .collect()
+}
+
+pub trait ContentHashExt {
+    fn hash(&self) -> String;
 }

@@ -1,11 +1,8 @@
+use crate::util::ContentHashExt;
 use k8s_openapi::api::core::v1::ConfigMap;
 use std::hash::{DefaultHasher, Hash, Hasher};
 
-pub trait ConfigMapExt {
-    fn hash(&self) -> String;
-}
-
-impl ConfigMapExt for ConfigMap {
+impl ContentHashExt for ConfigMap {
     fn hash(&self) -> String {
         let mut hasher = DefaultHasher::new();
 

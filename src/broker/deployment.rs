@@ -1,4 +1,4 @@
-use crate::util::cm_ext::ConfigMapExt;
+use crate::util::ContentHashExt;
 use crate::v1::MqttBroker;
 use crate::{MOSQUITTO_VERSION, labels};
 use k8s_openapi::api::apps::v1::{Deployment, DeploymentSpec};
