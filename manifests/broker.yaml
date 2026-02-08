@@ -1,4 +1,4 @@
-apiVersion: m7o.athmer.cloud/v1alpha
+apiVersion: m7o.athmer.cloud/v1alpha1
 kind: MqttBroker
 metadata:
   namespace: default

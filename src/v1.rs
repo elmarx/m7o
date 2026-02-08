@@ -7,7 +7,7 @@ use std::collections::BTreeMap;
 #[kube(
     kind = "MqttBroker",
     group = "m7o.athmer.cloud",
-    version = "v1alpha",
+    version = "v1alpha1",
     namespaced
 )]
 pub struct BrokerSpec {
@@ -35,7 +35,7 @@ pub enum ServiceType {
 #[kube(
     kind = "MqttUser",
     group = "m7o.athmer.cloud",
-    version = "v1alpha",
+    version = "v1alpha1",
     namespaced
 )]
 #[serde(rename_all = "camelCase")]
