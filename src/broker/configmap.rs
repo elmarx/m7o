@@ -8,11 +8,8 @@ use std::collections::BTreeMap;
 
 // default config from docker
 const MOSQUITTO_CONF: &str = r#"
-# This is a Mosquitto configuration file that creates a listener on port 1883
-# that allows unauthenticated access.
-
 listener 1883
-allow_anonymous true
+password_file /mosquitto/config/password_file
 
 listener 9883
 protocol http_api

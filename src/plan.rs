@@ -23,10 +23,6 @@ pub fn plan(
         })
         .collect::<HashMap<_, _>>();
 
-    let configmap = broker.configmap();
-    let deployment = broker.deployment(&configmap);
-    let service = broker.service();
-
     let mut secrets_to_create = Vec::with_capacity(users.len() - existing_secrets.len());
 
     let users = users
@@ -62,6 +58,10 @@ pub fn plan(
         ),
         ..Default::default()
     };
+
+    let configmap = broker.configmap();
+    let deployment = broker.deployment(&configmap, &password_file);
+    let service = broker.service();
 
     (
         configmap,
