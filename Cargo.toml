@@ -3,6 +3,7 @@ name = "m7o"
 version = "0.1.0"
 edition = "2024"
 default-run = "m7o"
+publish = false
 
 [[bin]]
 name = "crdgen"
