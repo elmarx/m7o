@@ -11,7 +11,7 @@ Mosquitto MQTT Operator
 | affinity | object | `{}` |  |
 | fullnameOverride | string | `""` |  |
 | image.pullPolicy | string | `"IfNotPresent"` |  |
-| image.repository | string | `"ghcr.io/elmarx/m7o-xp"` |  |
+| image.repository | string | `"ghcr.io/elmarx/m7o"` |  |
 | image.tag | string | `""` |  |
 | imagePullSecrets | list | `[]` |  |
 | nameOverride | string | `""` |  |
