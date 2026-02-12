@@ -16,7 +16,7 @@ minikube start
 # generate and install CRDs
 cargo run --bin crdgen | kubectl --context {{ context }} apply -f -
 # install sample broker
-kubectl apply -f manifests
+kubectl apply -f examples/manifests
 # run m7o operator
 cargo run
 # make minikube loadbalancers available

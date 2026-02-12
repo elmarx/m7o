@@ -1,7 +1,6 @@
 apiVersion: m7o.athmer.cloud/v1alpha1
 kind: MqttUser
 metadata:
-  namespace: default
   name: elmar
 spec:
   brokerRef:
