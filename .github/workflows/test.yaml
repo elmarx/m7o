@@ -1,9 +1,9 @@
 name: test
-on: [ push, pull_request ]
-
-env:
-  REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
+on:
+  push:
+    branches:
+      - '**'
+  pull_request:
 
 jobs:
   test:
@@ -41,7 +41,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          images: ghcr.io/${{ github.repository }}
           tags: |
             type=ref,event=branch
             type=ref,event=branch,suffix=-${{ github.run_number }}
