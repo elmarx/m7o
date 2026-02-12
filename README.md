@@ -12,7 +12,7 @@ An operator to deploy and manage mosquitto mqtt broker.
 # Installation
 
 ```shell
-helm install --create-namespace --namespace m7o oci://ghcr.io/elmarx/charts/m7o
+helm install --create-namespace --namespace m7o m7o oci://ghcr.io/elmarx/charts/m7o
 ```
 
 # Usage
