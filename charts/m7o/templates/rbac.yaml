@@ -1,0 +1,67 @@
+{{- if .Values.serviceAccount.create -}}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "m7o.fullname" . }}
+  labels:
+    {{- include "m7o.labels" . | nindent 4 }}
+rules:
+  - apiGroups:
+      - "m7o.athmer.cloud"
+    resources:
+      - mqttbrokers
+      - mqttusers
+      - mqttbrokers/status
+      - mqttusers/status
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
+      - ""
+    resources:
+      - configmaps
+      - secrets
+      - services
+      - events
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
+      - apps
+    resources:
+      - deployments
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ include "m7o.fullname" . }}
+  labels:
+    {{- include "m7o.labels" . | nindent 4 }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ include "m7o.fullname" . }}
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "m7o.serviceAccountName" . }}
+    namespace: {{ .Release.Namespace }}
+{{- end -}}
+

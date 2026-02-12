@@ -1,0 +1,95 @@
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: mqttbrokers.m7o.athmer.cloud
+spec:
+  group: m7o.athmer.cloud
+  names:
+    categories: []
+    kind: MqttBroker
+    plural: mqttbrokers
+    shortNames: []
+    singular: mqttbroker
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns: []
+    name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: Auto-generated derived type for BrokerSpec via `CustomResource`
+        properties:
+          spec:
+            properties:
+              desc:
+                type: string
+              service:
+                default:
+                  annotations: {}
+                  type: ClusterIP
+                properties:
+                  annotations:
+                    additionalProperties:
+                      type: string
+                    default: {}
+                    type: object
+                  type:
+                    default: ClusterIP
+                    enum:
+                    - ClusterIP
+                    - LoadBalancer
+                    type: string
+                type: object
+            required:
+            - desc
+            type: object
+        required:
+        - spec
+        title: MqttBroker
+        type: object
+    served: true
+    storage: true
+    subresources: {}
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: mqttusers.m7o.athmer.cloud
+spec:
+  group: m7o.athmer.cloud
+  names:
+    categories: []
+    kind: MqttUser
+    plural: mqttusers
+    shortNames: []
+    singular: mqttuser
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns: []
+    name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: Auto-generated derived type for MqttUserSpec via `CustomResource`
+        properties:
+          spec:
+            properties:
+              brokerRef:
+                properties:
+                  name:
+                    type: string
+                required:
+                - name
+                type: object
+              username:
+                type: string
+            required:
+            - brokerRef
+            - username
+            type: object
+        required:
+        - spec
+        title: MqttUser
+        type: object
+    served: true
+    storage: true
+    subresources: {}
