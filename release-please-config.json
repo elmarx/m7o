@@ -1,0 +1,13 @@
+{
+  "packages": {
+    ".": {
+      "release-type": "rust",
+      "package-name": "m7o"
+    },
+    "charts/m7o": {
+      "release-type": "helm",
+      "package-name": "m7o-chart"
+    }
+  }
+}
+
