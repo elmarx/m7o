@@ -24,7 +24,7 @@ schemars = "1.2.0"
 serde_json = "1.0.149"
 serde_yaml = "0.9.34"
 strum = { version = "0.27.2", features = ["strum_macros", "derive"] }
-rand = "0.9.2"
+rand = "0.10.0"
 pbkdf2 = "0.12.2"
 sha2 = "0.10.9"
 base64 = "0.22.1"
