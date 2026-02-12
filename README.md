@@ -9,7 +9,49 @@ An operator to deploy and manage mosquitto mqtt broker.
 - [ ] MosquittoAcl to control access
 - [ ] MosquittoBridge to mirror topics from/to other brokers
 
-# Local testing with minikube
+# Installation
+
+```shell
+helm install --create-namespace --namespace m7o oci://ghcr.io/elmarx/charts/m7o
+```
+
+# Usage
+
+### Define a MosquittoBroker resource:
+
+```yaml
+apiVersion: m7o.athmer.cloud/v1alpha1
+kind: MqttBroker
+metadata:
+  name: homassistant
+  namespace: my-namespace
+spec:
+  desc: "Home Assistant Broker"
+  service:
+    type: LoadBalancer
+```
+
+### define user(s) for the broker:
+
+```yaml
+apiVersion: m7o.athmer.cloud/v1alpha1
+kind: MqttUser
+metadata:
+  name: my-user
+  namespace: my-namespace
+spec:
+  brokerRef:
+    name: homassistant
+  username: my-user
+```
+
+### use the generated password
+
+Find the user's credentials in secret `$BROKER_NAME-$USERNAME` (e.g. "homassistant-my-user")
+
+# Development
+
+## Local testing with minikube
 
 ```shell
 minikube start
@@ -31,7 +73,7 @@ mosquitto_sub -h $IP -u elmar -P $PASSWORD -t "m7o"
 mosquitto_pub -h $IP -u elmar -P $PASSWORD -t "m7o" -m "Hello, m7o!"
 ```
 
-# Debugging
+## Debugging
 
 Check if CRD/sample is installed
 
