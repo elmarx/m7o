@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.1.1](https://github.com/elmarx/m7o/compare/v0.1.0...v0.1.1) (2026-02-12)
+## [0.1.1](https://github.com/elmarx/m7o/compare/m7o-v0.1.0...m7o-v0.1.1) (2026-02-12)
 
 ### Bug Fixes
 
