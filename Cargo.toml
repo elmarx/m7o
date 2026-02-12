@@ -4,6 +4,8 @@ version = "0.1.0"
 edition = "2024"
 default-run = "m7o"
 publish = false
+authors = ["Elmar Athmer"]
+license = "MIT OR Apache-2.0"
 
 [[bin]]
 name = "crdgen"
